@@ -1,4 +1,11 @@
-import os
+#!/usr/bin/env python3
+"""
+🔥 CRAX KEYWORD GENERATOR BOT 🔥
+Advanced Professional Telegram Bot for Keyword Generation
+Developer: @CRAXOP
+Version: 2.0 Pro
+"""
+
 import requests
 import json
 import re
@@ -13,17 +20,31 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Documen
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 from io import StringIO
 import tempfile
+import os
+import os
 
-BOT_TOKEN = "8282991053:AAEhTVc2lOHuvDMekMqqhLrCON5ll7F7SWY"
-ADMIN_ID = 7141695869
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🔧 BOT CONFIGURATION - REPLACE WITH YOUR ACTUAL VALUES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+BOT_TOKEN = "8282991053:AAEhTVc2lOHuvDMekMqqhLrCON5ll7F7SWY"  # Get from @BotFather
+ADMIN_ID = 7141695869  # Your Telegram User ID from @userinfobot
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🔐 SUBSCRIPTION MANAGEMENT SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════════
+
 ACCESS_FILE = "accessusers.txt"
 KEYS_FILE = "generated_keys.json"
 
 class SubscriptionManager:
+    """Advanced subscription management system"""
+    
     def __init__(self):
         self.ensure_files_exist()
     
     def ensure_files_exist(self):
+        """Ensure required files exist"""
         if not os.path.exists(ACCESS_FILE):
             with open(ACCESS_FILE, 'w', encoding='utf-8') as f:
                 f.write("# CRAX KEYWORD GENERATOR - ACCESS USERS\n")
@@ -35,16 +56,19 @@ class SubscriptionManager:
                 json.dump({}, f)
     
     def generate_key(self, days: int) -> str:
-
+        """Generate a unique access key"""
+        # Load existing keys
         with open(KEYS_FILE, 'r', encoding='utf-8') as f:
             keys_data = json.load(f)
         
+        # Generate unique key
         while True:
             serial = ''.join(random.choices(string.digits, k=6))
             key = f"CRAX-KEYWORD-{serial}"
             if key not in keys_data:
                 break
         
+        # Save key with expiry info
         keys_data[key] = {
             "days": days,
             "generated_date": datetime.now().isoformat(),
@@ -59,6 +83,7 @@ class SubscriptionManager:
         return key
     
     def redeem_key(self, key: str, user_id: int, username: str) -> dict:
+        """Redeem an access key"""
         with open(KEYS_FILE, 'r', encoding='utf-8') as f:
             keys_data = json.load(f)
         
@@ -68,9 +93,11 @@ class SubscriptionManager:
         if keys_data[key]["redeemed"]:
             return {"success": False, "message": "Key already redeemed"}
         
+        # Check if user already has access
         if self.has_access(user_id):
             return {"success": False, "message": "User already has active subscription"}
         
+        # Redeem key
         days = keys_data[key]["days"]
         expiry_date = datetime.now() + timedelta(days=days)
         
@@ -78,9 +105,11 @@ class SubscriptionManager:
         keys_data[key]["redeemed_by"] = user_id
         keys_data[key]["redeemed_date"] = datetime.now().isoformat()
         
+        # Save updated keys
         with open(KEYS_FILE, 'w', encoding='utf-8') as f:
             json.dump(keys_data, f, indent=2)
         
+        # Add user to access file
         self.add_user_access(user_id, username, expiry_date)
         
         return {
@@ -90,10 +119,12 @@ class SubscriptionManager:
         }
     
     def add_user_access(self, user_id: int, username: str, expiry_date: datetime):
+        """Add user to access file"""
         with open(ACCESS_FILE, 'a', encoding='utf-8') as f:
             f.write(f"{user_id} - {username} - {expiry_date.strftime('%Y-%m-%d %H:%M:%S')}\n")
     
     def has_access(self, user_id: int) -> bool:
+        """Check if user has active access"""
         if user_id == ADMIN_ID:
             return True
         
@@ -121,6 +152,7 @@ class SubscriptionManager:
             return False
     
     def get_user_expiry(self, user_id: int) -> datetime:
+        """Get user's subscription expiry date"""
         try:
             with open(ACCESS_FILE, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -142,6 +174,7 @@ class SubscriptionManager:
             return None
     
     def get_all_users(self) -> list:
+        """Get all users with access"""
         users = []
         try:
             with open(ACCESS_FILE, 'r', encoding='utf-8') as f:
@@ -170,6 +203,7 @@ class SubscriptionManager:
             return []
     
     def cleanup_expired_users(self):
+        """Remove expired users from access file"""
         try:
             users = self.get_all_users()
             active_users = [u for u in users if u["active"]]
@@ -184,7 +218,12 @@ class SubscriptionManager:
         except:
             pass
 
+# Initialize subscription manager
 subscription_manager = SubscriptionManager()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🎯 ADVANCED LOGGING CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════════
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -196,7 +235,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🚀 ADVANCED KEYWORD GENERATION ENGINE
+# ═══════════════════════════════════════════════════════════════════════════════
+
 class KeywordGenerator:
+    """Advanced Keyword Generation System"""
     
     def __init__(self):
         self.session = None
@@ -206,59 +250,74 @@ class KeywordGenerator:
         ]
     
     async def initialize_session(self):
+        """Initialize async HTTP session"""
         if not self.session:
             self.session = aiohttp.ClientSession()
     
     async def close_session(self):
+        """Close HTTP session"""
         if self.session:
             await self.session.close()
     
     async def generate_semantic_keywords(self, topic: str, count: int = 50) -> list:
+        """Generate semantically related keywords using multiple APIs"""
         await self.initialize_session()
         keywords = set()
         
         try:
+            # Method 1: Datamuse API for related words
             datamuse_keywords = await self._fetch_datamuse_keywords(topic, count)
             keywords.update(datamuse_keywords)
             
+            # Method 2: Generate contextual variations
             contextual_keywords = self._generate_contextual_keywords(topic, count)
             keywords.update(contextual_keywords)
             
+            # Method 3: Generate semantic variations
             semantic_keywords = self._generate_semantic_variations(topic, count)
             keywords.update(semantic_keywords)
             
+            # Method 5: Generate additional variations for large counts
             if count > 100:
                 additional_keywords = self._generate_additional_variations(topic, count)
                 keywords.update(additional_keywords)
             
+            # Method 6: Generate compound keywords for very large counts
             if count > 300:
                 compound_keywords = self._generate_compound_keywords(topic, count)
                 keywords.update(compound_keywords)
             
         except Exception as e:
             logger.error(f"Error generating keywords: {e}")
+            # Fallback to basic keyword generation
             keywords = self._generate_fallback_keywords(topic)
         
+        # Clean and filter keywords
         filtered_keywords = self._filter_and_clean_keywords(list(keywords), topic)
         
+        # Return requested number of keywords
         return filtered_keywords[:count]
     
     async def _fetch_datamuse_keywords(self, topic: str, count: int = 50) -> list:
+        """Fetch related words from Datamuse API"""
         keywords = []
         
         try:
+            # Get words that mean the same as the topic
             url = f"https://api.datamuse.com/words?ml={topic}&max={min(50, count//2)}"
             async with self.session.get(url, timeout=10) as response:
                 if response.status == 200:
                     data = await response.json()
                     keywords.extend([item['word'] for item in data])
             
+            # Get words that are triggered by the topic
             url = f"https://api.datamuse.com/words?rel_trg={topic}&max={min(30, count//3)}"
             async with self.session.get(url, timeout=10) as response:
                 if response.status == 200:
                     data = await response.json()
                     keywords.extend([item['word'] for item in data])
             
+            # Get words that rhyme with the topic
             url = f"https://api.datamuse.com/words?rel_rhy={topic}&max={min(20, count//4)}"
             async with self.session.get(url, timeout=10) as response:
                 if response.status == 200:
@@ -271,21 +330,27 @@ class KeywordGenerator:
         return keywords
     
     def _generate_contextual_keywords(self, topic: str, count: int = 50) -> list:
+        """Generate contextual keyword variations"""
         words = topic.lower().split()
         keywords = []
         
+        # Common prefixes and suffixes for business/tech keywords
         prefixes = ['best', 'top', 'free', 'cheap', 'premium', 'professional', 'advanced', 'ultimate', 'quality', 'reliable', 'trusted', 'leading', 'expert', 'certified']
         suffixes = ['service', 'solution', 'tool', 'software', 'app', 'platform', 'system', 'guide', 'tips', 'tricks', 'methods', 'strategies', 'techniques', 'approach']
         
+        # Generate combinations
         for word in words:
+            # Add prefixes
             for prefix in prefixes:
                 keywords.append(f"{prefix} {word}")
                 keywords.append(f"{prefix} {topic}")
             
+            # Add suffixes
             for suffix in suffixes:
                 keywords.append(f"{word} {suffix}")
                 keywords.append(f"{topic} {suffix}")
         
+        # Add question-based keywords
         question_starters = ['how to', 'what is', 'why', 'when', 'where to find', 'how do', 'what are', 'where can', 'which', 'who uses']
         for starter in question_starters:
             keywords.append(f"{starter} {topic}")
@@ -293,6 +358,7 @@ class KeywordGenerator:
         return keywords
     
     def _generate_semantic_variations(self, topic: str, count: int = 50) -> list:
+        """Generate semantic variations and related terms"""
         keywords = []
         
         # Industry-specific mappings
@@ -305,10 +371,12 @@ class KeywordGenerator:
             'business': ['company', 'corporate', 'enterprise', 'startup', 'entrepreneur', 'commerce']
         }
         
+        # Find related terms
         topic_lower = topic.lower()
         for key, values in semantic_map.items():
             if any(word in topic_lower for word in key.split()):
                 keywords.extend(values)
+                # Create combinations
                 for value in values:
                     keywords.append(f"{topic} {value}")
                     keywords.append(f"{value} {topic}")
@@ -316,12 +384,16 @@ class KeywordGenerator:
         return keywords
     
     def _generate_industry_keywords(self, topic: str, count: int = 50) -> list:
+        """Generate industry-specific keywords"""
         keywords = []
         
+        # Action words
         actions = ['buy', 'sell', 'get', 'find', 'compare', 'review', 'learn', 'discover', 'choose', 'select', 'purchase', 'obtain', 'acquire', 'search']
         
+        # Modifiers
         modifiers = ['online', 'digital', 'mobile', 'instant', 'quick', 'easy', 'secure', 'reliable', 'affordable', 'cheap', 'expensive', 'premium', 'quality', 'fast']
         
+        # Generate combinations
         for action in actions:
             keywords.append(f"{action} {topic}")
         
@@ -331,9 +403,11 @@ class KeywordGenerator:
         return keywords
     
     def _generate_additional_variations(self, topic: str, count: int) -> list:
+        """Generate additional keyword variations for large counts"""
         keywords = []
         words = topic.lower().split()
         
+        # Extended modifiers for large counts
         extended_modifiers = [
             'new', 'old', 'modern', 'traditional', 'innovative', 'creative', 'unique', 'special',
             'custom', 'personalized', 'automated', 'manual', 'smart', 'intelligent', 'powerful',
@@ -342,11 +416,13 @@ class KeywordGenerator:
             'private', 'public', 'exclusive', 'popular', 'trending', 'latest', 'updated'
         ]
         
+        # Time-based keywords
         time_modifiers = [
             '2024', '2025', 'today', 'now', 'current', 'recent', 'latest', 'new',
             'daily', 'weekly', 'monthly', 'yearly', 'seasonal', 'temporary', 'permanent'
         ]
         
+        # Generate combinations
         for word in words:
             for modifier in extended_modifiers:
                 keywords.append(f"{modifier} {word}")
@@ -359,25 +435,30 @@ class KeywordGenerator:
         return keywords
     
     def _generate_compound_keywords(self, topic: str, count: int) -> list:
+        """Generate compound keywords for very large counts"""
         keywords = []
         words = topic.lower().split()
         
+        # Business terms
         business_terms = [
             'strategy', 'management', 'consulting', 'analysis', 'optimization', 'automation',
             'integration', 'implementation', 'development', 'improvement', 'enhancement',
             'transformation', 'innovation', 'solution', 'framework', 'methodology'
         ]
         
+        # Technical terms
         tech_terms = [
             'api', 'software', 'application', 'platform', 'system', 'technology', 'digital',
             'cloud', 'mobile', 'web', 'online', 'virtual', 'artificial', 'machine', 'data'
         ]
         
+        # Industry terms
         industry_terms = [
             'market', 'industry', 'sector', 'business', 'enterprise', 'corporate', 'startup',
             'company', 'organization', 'agency', 'firm', 'service', 'provider', 'vendor'
         ]
         
+        # Generate compound combinations
         all_terms = business_terms + tech_terms + industry_terms
         
         for word in words:
@@ -390,15 +471,18 @@ class KeywordGenerator:
         return keywords
     
     def _generate_fallback_keywords(self, topic: str) -> set:
+        """Fallback keyword generation when APIs fail"""
         keywords = set()
         words = topic.lower().split()
         
+        # Basic variations
         for word in words:
             keywords.add(word)
-            keywords.add(f"{word}s")
-            keywords.add(f"{word}ing")
-            keywords.add(f"{word}ed")
+            keywords.add(f"{word}s")  # Plural
+            keywords.add(f"{word}ing")  # Gerund
+            keywords.add(f"{word}ed")  # Past tense
         
+        # Common combinations
         common_terms = ['best', 'top', 'free', 'online', 'guide', 'tips', 'how to', 'review']
         for term in common_terms:
             keywords.add(f"{term} {topic}")
@@ -406,21 +490,26 @@ class KeywordGenerator:
         return keywords
     
     def _filter_and_clean_keywords(self, keywords: list, original_topic: str) -> list:
+        """Filter and clean generated keywords"""
         cleaned = []
         seen = set()
         
         for keyword in keywords:
+            # Clean the keyword
             clean_keyword = re.sub(r'[^\w\s-]', '', keyword.lower().strip())
             
+            # Skip if empty, too short, or already seen
             if not clean_keyword or len(clean_keyword) < 2 or clean_keyword in seen:
                 continue
             
+            # Skip if it's just the original topic
             if clean_keyword == original_topic.lower():
                 continue
             
             seen.add(clean_keyword)
             cleaned.append(clean_keyword)
         
+        # Sort by relevance (keywords containing original topic first)
         topic_words = set(original_topic.lower().split())
         
         def relevance_score(kw):
@@ -431,9 +520,15 @@ class KeywordGenerator:
         cleaned.sort(key=relevance_score, reverse=True)
         return cleaned
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🎨 TELEGRAM BOT HANDLERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Initialize keyword generator
 keyword_gen = KeywordGenerator()
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """🏠 Professional welcome message"""
     user = update.effective_user
     username = f"@{user.username}" if user.username else user.first_name
     
@@ -475,6 +570,7 @@ Type `/cmd` to explore all features!
     )
 
 async def cmd_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """📋 Show all available commands"""
     
     cmd_message = f"""
 🎯 **CRAX KEYWORD GENERATOR - COMMAND CENTER**
@@ -532,8 +628,10 @@ async def cmd_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def keywords_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """🎯 Generate keywords for given topic with custom count"""
     user = update.effective_user
     
+    # Check if user has access
     if not subscription_manager.has_access(user.id):
         await update.message.reply_text(
             f"""
@@ -559,6 +657,7 @@ Once you have a key, use: `/redeem YOUR-KEY`
         )
         return
     
+    # Extract topic from command
     if not context.args:
         error_message = f"""
 ❌ **INVALID COMMAND FORMAT**
@@ -585,12 +684,15 @@ Once you have a key, use: `/redeem YOUR-KEY`
         await update.message.reply_text(error_message, parse_mode='Markdown')
         return
     
+    # Parse arguments
     args = context.args
     
+    # Check if last argument is a number (REQUIRED)
     if len(args) >= 2 and args[-1].isdigit():
         keyword_count = int(args[-1])
         topic = ' '.join(args[:-1]).strip()
     else:
+        # No count specified - show error
         await update.message.reply_text(
             f"""
 ❌ **QUANTITY NOT SPECIFIED!**
@@ -619,6 +721,7 @@ Once you have a key, use: `/redeem YOUR-KEY`
         )
         return
     
+    # Validate minimum keyword count
     if keyword_count < 10:
         await update.message.reply_text(
             f"❌ **MINIMUM 10 KEYWORDS REQUIRED!**\n\nYou requested: {keyword_count}\nMinimum allowed: 10\n\n👨‍💻 **Developer:** @CRAXOP",
@@ -633,6 +736,7 @@ Once you have a key, use: `/redeem YOUR-KEY`
         )
         return
     
+    # Send processing message
     processing_msg = await update.message.reply_text(
         f"""
 🔥 **CRAX KEYWORD GENERATOR ACTIVATED!**
@@ -653,6 +757,7 @@ Once you have a key, use: `/redeem YOUR-KEY`
     )
     
     try:
+        # Generate keywords using advanced AI with custom count
         keywords = await keyword_gen.generate_semantic_keywords(topic, keyword_count)
         
         if not keywords:
@@ -678,36 +783,42 @@ Once you have a key, use: `/redeem YOUR-KEY`
             )
             return
         
+        # Create professional TXT file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"CRAX_Keywords_{topic.replace(' ', '_')}_{timestamp}.txt"
         
+        # Generate professional file content
         file_content = f"""
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                        🔥 CRAX KEYWORD GENERATOR 🔥                          ║
-║                           PROFESSIONAL EDITION                               ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+║                           CRAX KEYWORD GENERATOR                           
+                             PROFESSIONAL EDITION                               
 
-📊 KEYWORD ANALYSIS REPORT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 TARGET TOPIC: {topic.upper()}
-📅 GENERATED ON: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-🔢 TOTAL KEYWORDS: {len(keywords)}
-⚡ PROCESSING METHOD: Advanced Semantic Analysis
-🔥 Must Check Last Some Lines and Remove Unwanted Content
+ KEYWORD ANALYSIS REPORT :
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+ TARGET TOPIC: {topic.upper()}
+ GENERATED ON: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+ TOTAL KEYWORDS: {len(keywords)}
+ PROCESSING METHOD: Advanced Semantic Analysis
+ Must Check Last Some Lines and Remove Unwanted Content
+
+
+
 
 🔥 HIGH-QUALITY KEYWORDS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
 
 """
         
+        # Add keywords with professional formatting
         for keyword in keywords:
             file_content += f"{keyword}\n"
         
         file_content += f"""
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
 
 💡 Specially Made For:
 • Cred!t C@rd Dumpers
@@ -721,19 +832,22 @@ Once you have a key, use: `/redeem YOUR-KEY`
 • Industry-specific terms
 • Best And Working
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                    🚀 POWERED BY CRAX TECHNOLOGIES 🚀                       ║
-║                         👨‍💻 Developer: @CRAXOP                              ║
-║                      ⚡ Advanced Keyword Generation                       ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+ 
+                     🚀 POWERED BY CRAX TECHNOLOGIES 🚀                       
+                          👨‍💻 Developer: @CRAXOP                              
+                       ⚡ Advanced Keyword Generation                       
+
         """
         
+        # Create temporary file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as temp_file:
             temp_file.write(file_content)
             temp_file_path = temp_file.name
         
+        # Send success message with file
         success_message = f"""
 ✅ **KEYWORD GENERATION COMPLETED!**
 
@@ -756,6 +870,7 @@ Once you have a key, use: `/redeem YOUR-KEY`
 🚀 **Thank you for using CRAX Keyword Generator!**
         """
         
+        # Send file
         with open(temp_file_path, 'rb') as file:
             await update.message.reply_document(
                 document=file,
@@ -764,10 +879,13 @@ Once you have a key, use: `/redeem YOUR-KEY`
                 parse_mode='Markdown'
             )
         
+        # Clean up temporary file
         os.unlink(temp_file_path)
         
+        # Delete processing message
         await processing_msg.delete()
         
+        # Log successful generation
         logger.info(f"Keywords generated for user {user.id} ({user.username}): {topic} - {len(keywords)} keywords")
         
     except Exception as e:
@@ -794,6 +912,7 @@ Once you have a key, use: `/redeem YOUR-KEY`
         )
 
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """🔐 Admin Panel (Admin only)"""
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text(
             "❌ **ACCESS DENIED**\n\nThis command is restricted to administrators only.\n\n👨‍💻 **Developer:** @CRAXOP",
@@ -842,6 +961,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(admin_message, parse_mode='Markdown')
 
 async def genkey_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """🔑 Generate access key (Admin only)"""
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text(
             "❌ **ACCESS DENIED**\n\nThis command is restricted to administrators only.\n\n👨‍💻 **Developer:** @CRAXOP",
@@ -874,7 +994,7 @@ async def genkey_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     days = int(context.args[0])
     
-    if days < 1 or days > 3650:
+    if days < 1 or days > 3650:  # Max 10 years
         await update.message.reply_text(
             "❌ **INVALID DAYS**\n\nDays must be between 1 and 3650 (10 years)\n\n👨‍💻 **Developer:** @CRAXOP",
             parse_mode='Markdown'
@@ -909,6 +1029,7 @@ Send this key to the user and ask them to use:
     await update.message.reply_text(success_message, parse_mode='Markdown')
 
 async def cast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """📢 Broadcast message to all users (Admin only)"""
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text(
             "❌ **ACCESS DENIED**\n\nThis command is restricted to administrators only.\n\n👨‍💻 **Developer:** @CRAXOP",
@@ -988,6 +1109,7 @@ async def cast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(result_message, parse_mode='Markdown')
 
 async def ping_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """🏓 Check bot status (Admin only)"""
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text(
             "❌ **ACCESS DENIED**\n\nThis command is restricted to administrators only.\n\n👨‍💻 **Developer:** @CRAXOP",
@@ -1016,6 +1138,7 @@ async def ping_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(ping_message, parse_mode='Markdown')
 
 async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """👥 View all users (Admin only)"""
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text(
             "❌ **ACCESS DENIED**\n\nThis command is restricted to administrators only.\n\n👨‍💻 **Developer:** @CRAXOP",
@@ -1059,6 +1182,7 @@ async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(users_message, parse_mode='Markdown')
 
 async def cleanup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """🧹 Cleanup expired users (Admin only)"""
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text(
             "❌ **ACCESS DENIED**\n\nThis command is restricted to administrators only.\n\n👨‍💻 **Developer:** @CRAXOP",
@@ -1093,6 +1217,7 @@ async def cleanup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(cleanup_message, parse_mode='Markdown')
 
 async def redeem_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """🔑 Redeem access key"""
     user = update.effective_user
     
     if not context.args:
@@ -1173,6 +1298,7 @@ Contact @CRAXOP for support
         await update.message.reply_text(error_message, parse_mode='Markdown')
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """📊 Show bot statistics (Admin only)"""
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text(
             "❌ **ACCESS DENIED**\n\nThis command is restricted to administrators only.\n\n👨‍💻 **Developer:** @CRAXOP",
@@ -1198,7 +1324,7 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 ⚡ **SYSTEM FEATURES:**
 ✅ Advanced keyword generation
-✅ Professional TXT file output
+✅ Professional pdf file output
 ✅ Semantic analysis engine
 ✅ Multi-API integration
 ✅ Error handling & logging
@@ -1213,10 +1339,12 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(stats_message, parse_mode='Markdown')
 
 async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle inline keyboard callbacks"""
     query = update.callback_query
     await query.answer()
     
     if query.data == "show_commands":
+        # Show the same content as /cmd command
         cmd_message = f"""
 🎯 **CRAX KEYWORD GENERATOR - COMMAND CENTER**
 
@@ -1277,6 +1405,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             parse_mode='Markdown'
         )
     elif query.data == "go_home":
+        # Recreate the start message
         user = query.from_user
         username = f"@{user.username}" if user.username else user.first_name
         
@@ -1318,6 +1447,7 @@ Type `/cmd` to explore all features!
         )
 
 async def handle_unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle unknown commands and messages"""
     unknown_message = f"""
 ❓ **UNKNOWN COMMAND**
 
@@ -1341,17 +1471,36 @@ async def handle_unknown_command(update: Update, context: ContextTypes.DEFAULT_T
     await update.message.reply_text(unknown_message, parse_mode='Markdown')
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle errors"""
     logger.error(f"Update {update} caused error {context.error}")
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🚀 MAIN APPLICATION ENTRY POINT
+# ═══════════════════════════════════════════════════════════════════════════════
+
 def main():
+    """🔥 Launch the CRAX Keyword Generator Bot"""
     
+    # Validate configuration
+    if BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
+        print("❌ ERROR: Please set your BOT_TOKEN!")
+        print("🔧 Get your token from @BotFather on Telegram")
+        return
+    
+    if ADMIN_ID == 123456789:
+        print("⚠️  WARNING: Please set your ADMIN_ID!")
+        print("🔧 Get your user ID from @userinfobot")
+    
+    # Create application
     application = Application.builder().token(BOT_TOKEN).build()
     
+    # Add command handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("cmd", cmd_command))
     application.add_handler(CommandHandler("keywords", keywords_command))
     application.add_handler(CommandHandler("redeem", redeem_command))
     
+    # Admin commands
     application.add_handler(CommandHandler("admin", admin_command))
     application.add_handler(CommandHandler("genkey", genkey_command))
     application.add_handler(CommandHandler("cast", cast_command))
@@ -1360,12 +1509,23 @@ def main():
     application.add_handler(CommandHandler("cleanup", cleanup_command))
     application.add_handler(CommandHandler("stats", stats_command))
     
+    # Add callback query handler for inline buttons
     application.add_handler(CallbackQueryHandler(handle_callback_query))
     
+    # Add message handler for unknown commands
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_unknown_command))
     
+    # Add error handler
     application.add_error_handler(error_handler)
     
+    # Launch bot
+    print("🔥 CRAX KEYWORD GENERATOR BOT STARTING...")
+    print(f"🤖 Bot Token: {BOT_TOKEN[:10]}...")
+    print(f"👑 Admin ID: {ADMIN_ID}")
+    print("✅ Bot is LIVE! Press Ctrl+C to stop.")
+    print("👨‍💻 Developer: @CRAXOP")
+    
+    # Run the bot
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
