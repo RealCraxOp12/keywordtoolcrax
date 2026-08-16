@@ -27,7 +27,7 @@ import os
 # 🔧 BOT CONFIGURATION - REPLACE WITH YOUR ACTUAL VALUES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-BOT_TOKEN = "8282991053:AAEhTVc2lOHuvDMekMqqhLrCON5ll7F7SWY"  # Get from @BotFather
+BOT_TOKEN = "7971091050:AAFL99d8DHOO_3Fzgq4FK76l1WsMoO8k51Q"  # Get from @BotFather
 ADMIN_ID = 7141695869  # Your Telegram User ID from @userinfobot
 
 # ═══════════════════════════════════════════════════════════════════════════════
